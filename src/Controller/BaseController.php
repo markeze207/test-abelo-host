@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Core\Session;
 use App\Helpers\Validation\ValidationTrait;
 use Smarty;
 use App\Core\Database;
@@ -11,6 +12,7 @@ abstract class BaseController
     protected Smarty $smarty;
     protected Database $db;
     use ValidationTrait;
+    protected Session $session;
 
     public function __construct()
     {
@@ -20,6 +22,8 @@ abstract class BaseController
         $this->db = Database::getInstance();
 
         $this->assignGlobalVars();
+
+        $this->session = Session::getInstance();
     }
     private function setupSmarty(): void
     {

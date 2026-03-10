@@ -172,4 +172,9 @@ class PostService
 
         return Post::fromArray($postData);
     }
+
+    public function incrementPostViews(int $postId): bool
+    {
+        return $this->postRepository->incrementViews($postId);
+    }
 }

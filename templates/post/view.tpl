@@ -62,6 +62,8 @@
 
                         <div class="post-meta">
                             <span>{$similar->getFormattedDate('d.m.Y')}</span>
+                            <span>•</span>
+                            <span>Просмотров: {$similar->views}</span>
                         </div>
                     </article>
                 {/foreach}

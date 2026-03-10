@@ -30,6 +30,13 @@ class PostController extends BaseController
             return;
         }
 
+        $this->postService->incrementPostViews($post->id);
+
+//        if (!$this->session->has('post_viewed_' . $post->id)) {
+//             $this->postService->incrementPostViews($post->id);
+//             $this->session->set('post_viewed_' . $post->id, true);
+//        }
+
         $similarPosts = $this->postService->getSimilarPosts($post->id, 3);
 
         $this->render('post/view.tpl', [
