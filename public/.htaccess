@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Если файл существует - используем его
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+    
+    # Если директория существует - используем её
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # Все остальное на index.php
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Разрешаем доступ
+Require all granted

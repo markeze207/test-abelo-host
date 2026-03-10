@@ -1,0 +1,24 @@
+# Smarty
+/smarty/compiled/*
+/smarty/cache/*
+!/smarty/compiled/.gitkeep
+!/smarty/cache/.gitkeep
+
+# Uploads
+/public/assets/uploads/*
+!/public/assets/uploads/.gitkeep
+
+# Logs
+/logs/*
+!/logs/.gitkeep
+
+# Composer
+/vendor/
+
+# IDE
+/.idea/
+/.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
