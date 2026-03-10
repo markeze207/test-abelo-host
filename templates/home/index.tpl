@@ -100,6 +100,6 @@
         </section>
     {/if}
 
-    <script src="/assets/js/load-more.min.js"></script>
+    <script src="/assets/js/load-more.js"></script>
     <script src="/assets/js/category-loader.js"></script>
 {/block}
