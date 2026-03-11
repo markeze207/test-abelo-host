@@ -20,4 +20,3 @@ php seed.php
 ## Docker
 
 docker-compose up -d
-docker-compose down
