@@ -40,10 +40,11 @@ interface PostRepositoryInterface
      * @param string $sortBy
      * @param string $order
      * @param int $limit
-     * @param int $offset
+     * @param int|null $lastId
+     * @param mixed|null $lastValue
      * @return array
      */
-    public function getByCategory(int $categoryId, string $sortBy = 'created_at', string $order = 'DESC', int $limit = 10, int $offset = 0): array;
+    public function getByCategory(int $categoryId, string $sortBy = 'created_at', string $order = 'DESC', int $limit = 10, ?int $lastId = null, $lastValue = null): array;
 
     /**
      * @param int $postId
@@ -80,20 +81,23 @@ interface PostRepositoryInterface
      * @param int $page
      * @param int $perPage
      * @return array
+     * @deprecated Используйте getPaginatedWithCursor для лучшей производительности
      */
     public function getPaginated(int $page = 1, int $perPage = 10): array;
 
     /**
      * @param int $limit
-     * @param int $offset
+     * @param int|null $lastId
+     * @param int|null $lastViews
      * @return array
      */
-    public function getPopularPaginated(int $limit = 6, int $offset = 0): array;
+    public function getPopularPaginated(int $limit = 6, ?int $lastId = null, ?int $lastViews = null): array;
 
     /**
      * @param int $limit
-     * @param int $offset
+     * @param int|null $lastId
+     * @param string|null $lastCreatedAt
      * @return array
      */
-    public function getLatestPublishedPaginated(int $limit = 6, int $offset = 0): array;
+    public function getLatestPublishedPaginated(int $limit = 6, ?int $lastId = null, ?string $lastCreatedAt = null): array;
 }

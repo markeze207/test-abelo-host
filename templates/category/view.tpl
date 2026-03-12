@@ -24,25 +24,17 @@
         <div class="posts-list">
             {foreach $posts as $post}
                 <article class="post-item">
-                    {if $post->image}
+                    {if $post->getImageUrl()}
                         <div class="post-image">
-                            <img src="{$post->getImageUrl()}"
-                                 alt="{$post->title|escape}">
+                            <img src="{$post->getImageUrl()}" alt="{$post->title|escape}">
                         </div>
                     {/if}
-
                     <div class="post-content">
-                        <h2>
-                            <a href="{$post->getUrl()}">
-                                {$post->title|escape}
-                            </a>
-                        </h2>
-
+                        <h2><a href="{$post->getUrl()}">{$post->title|escape}</a></h2>
                         <p class="post-description">{$post->description|escape}</p>
-
                         <div class="post-meta">
-                            <span>Дата: {$post->getFormattedDate('d.m.Y')}</span>
-                            <span>Просмотров: {$post->views}</span>
+                            <span><i class="far fa-calendar"></i> {$post->getFormattedDate('d.m.Y')}</span>
+                            <span><i class="far fa-eye"></i> {$post->views}</span>
                         </div>
 
                         <a href="{$post->getUrl()}" class="read-more">
@@ -56,29 +48,32 @@
         {if $pagination.total_pages > 1}
             <div class="pagination">
                 {if $pagination.current_page > 1}
-                    <a href="?page={$pagination.current_page-1}&sort={$sort_by}&order={$order}" class="prev">
+                    <a href="?page={$pagination.current_page - 1}&sort={$sort_by|escape:'url'}&order={$order}" class="prev">
                         &laquo; Назад
                     </a>
                 {/if}
 
-                {for $i=1 to $pagination.total_pages}
-                    {if $i >= $pagination.current_page-2 && $i <= $pagination.current_page+2}
+                {for $i = 1 to $pagination.total_pages}
+                    {if $i >= $pagination.current_page - 2 && $i <= $pagination.current_page + 2}
                         {if $i == $pagination.current_page}
                             <span class="current">{$i}</span>
                         {else}
-                            <a href="?page={$i}&sort={$sort_by}&order={$order}">{$i}</a>
+                            <a href="?page={$i}&sort={$sort_by|escape:'url'}&order={$order}">{$i}</a>
                         {/if}
                     {/if}
                 {/for}
 
                 {if $pagination.current_page < $pagination.total_pages}
-                    <a href="?page={$pagination.current_page+1}&sort={$sort_by}&order={$order}" class="next">
+                    <a href="?page={$pagination.current_page + 1}&sort={$sort_by|escape:'url'}&order={$order}" class="next">
                         Вперед &raquo;
                     </a>
                 {/if}
             </div>
         {/if}
     {else}
-        <p>В этой категории пока нет статей</p>
+        <div class="empty-category">
+            <p>В этой категории пока нет статей.</p>
+            <a href="/" class="btn-home">На главную</a>
+        </div>
     {/if}
 {/block}

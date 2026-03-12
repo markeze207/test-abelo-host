@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS categories (
     slug VARCHAR(255) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_slug (slug)
+    INDEX idx_slug (slug),
+    INDEX idx_created_at (created_at),
+    INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Таблица постов (без статуса и комментариев)
@@ -34,6 +36,9 @@ CREATE TABLE IF NOT EXISTS posts (
     INDEX idx_published_at (published_at),
     INDEX idx_views (views),
     INDEX idx_slug (slug),
+    INDEX idx_created_at (created_at),
+    INDEX idx_views_created (views, created_at),
+    INDEX idx_created_views (created_at, views),
     FULLTEXT idx_search (title, description, content)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -42,28 +47,30 @@ CREATE TABLE IF NOT EXISTS post_category (
     post_id INT,
     category_id INT,
     PRIMARY KEY (post_id, category_id),
+    INDEX idx_category_id (category_id),
+    INDEX idx_post_id (post_id),
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Заполнение категориями (из CategorySeeder)
 INSERT INTO categories (name, description, slug, created_at) VALUES
- ('Новости', 'Свежие новости из мира технологий и разработки', 'novosti', NOW()),
- ('PHP', 'Всё о PHP: новые версии, лучшие практики, советы', 'php', NOW()),
- ('JavaScript', 'Современный JavaScript, фреймворки и библиотеки', 'javascript', NOW()),
- ('Базы данных', 'MySQL, PostgreSQL, MongoDB и другие СУБД', 'bazy-dannyh', NOW()),
- ('Инструменты', 'Полезные инструменты для разработчика', 'instrumenty', NOW()),
- ('Карьера', 'Советы по карьере в IT, собеседования, резюме', 'karera', NOW()),
- ('Python', 'Разработка на Python: веб, анализ данных, автоматизация', 'python', NOW()),
- ('Frontend', 'HTML, CSS, адаптивная верстка, UI/UX', 'frontend', NOW()),
- ('DevOps', 'CI/CD, контейнеризация, оркестрация, мониторинг', 'devops', NOW()),
- ('Алгоритмы и структуры данных', 'Подготовка к собеседованиям, оптимизация кода', 'algoritmy', NOW()),
- ('Go', 'Язык программирования Go: особенности, применение', 'go', NOW()),
- ('Мобильная разработка', 'iOS, Android, кроссплатформенные решения', 'mobilnaya-razrabotka', NOW()),
- ('Безопасность', 'Информационная безопасность, шифрование, защита данных', 'bezopasnost', NOW()),
- ('Искусственный интеллект', 'Машинное обучение, нейросети, AI в разработке', 'iskusstvennyj-intellekt', NOW()),
- ('Книги и ресурсы', 'Рекомендации книг, курсов, полезных ресурсов для разработчиков', 'knigi', NOW()),
- ('Архив', 'Старые, но полезные статьи', 'arhiv', NOW());
+('Новости', 'Свежие новости из мира технологий и разработки', 'novosti', NOW()),
+('PHP', 'Всё о PHP: новые версии, лучшие практики, советы', 'php', NOW()),
+('JavaScript', 'Современный JavaScript, фреймворки и библиотеки', 'javascript', NOW()),
+('Базы данных', 'MySQL, PostgreSQL, MongoDB и другие СУБД', 'bazy-dannyh', NOW()),
+('Инструменты', 'Полезные инструменты для разработчика', 'instrumenty', NOW()),
+('Карьера', 'Советы по карьере в IT, собеседования, резюме', 'karera', NOW()),
+('Python', 'Разработка на Python: веб, анализ данных, автоматизация', 'python', NOW()),
+('Frontend', 'HTML, CSS, адаптивная верстка, UI/UX', 'frontend', NOW()),
+('DevOps', 'CI/CD, контейнеризация, оркестрация, мониторинг', 'devops', NOW()),
+('Алгоритмы и структуры данных', 'Подготовка к собеседованиям, оптимизация кода', 'algoritmy', NOW()),
+('Go', 'Язык программирования Go: особенности, применение', 'go', NOW()),
+('Мобильная разработка', 'iOS, Android, кроссплатформенные решения', 'mobilnaya-razrabotka', NOW()),
+('Безопасность', 'Информационная безопасность, шифрование, защита данных', 'bezopasnost', NOW()),
+('Искусственный интеллект', 'Машинное обучение, нейросети, AI в разработке', 'iskusstvennyj-intellekt', NOW()),
+('Книги и ресурсы', 'Рекомендации книг, курсов, полезных ресурсов для разработчиков', 'knigi', NOW()),
+('Архив', 'Старые, но полезные статьи', 'arhiv', NOW());
 
 -- Заполнение постами (из PostSeeder)
 INSERT INTO posts (title, description, content, image, views, slug, published_at, created_at) VALUES

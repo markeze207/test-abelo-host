@@ -7,9 +7,6 @@ use App\Entity\Post;
 use App\Repositories\CategoryRepository;
 use App\Repositories\PostRepository;
 
-/**
- *
- */
 class CategoryService
 {
     /**
@@ -31,14 +28,18 @@ class CategoryService
     }
 
     /**
-     * @param int $page
-     * @param int $perPage
+     * @param int $limit
+     * @param int|null $lastId
+     * @param string|null $lastName
      * @return array
      */
-    public function getCategoriesWithPostsPaginated(int $page = 1, int $perPage = 3): array
+    public function getCategoriesWithPostsPaginated(int $limit = 3, ?int $lastId = null, ?string $lastName = null): array
     {
-        $categoriesData = $this->categoryRepository->getPaginatedWithPosts($page, $perPage);
-        $totalCategories = $this->categoryRepository->getTotalWithPostsCount();
+        $categoriesData = $this->categoryRepository->getPaginatedWithPosts($limit, $lastId, $lastName);
+
+        $totalCategories = ($lastId === null || $lastName === null)
+            ? $this->categoryRepository->getTotalWithPostsCount()
+            : null;
 
         $categories = [];
         foreach ($categoriesData as $categoryData) {
@@ -62,11 +63,14 @@ class CategoryService
         return [
             'categories' => $categories,
             'total' => $totalCategories,
-            'page' => $page,
-            'per_page' => $perPage,
-            'total_pages' => ceil($totalCategories / $perPage)
+            'has_more' => count($categories) === $limit,
+            'next_cursor' => !empty($categories) ? [
+                'last_id' => end($categories)->id,
+                'last_name' => end($categories)->name
+            ] : null
         ];
     }
+
 
     /**
      * @param int $postId
@@ -86,11 +90,12 @@ class CategoryService
      * @param string $slug
      * @param string $sortBy
      * @param string $order
-     * @param int $page
-     * @param int $perPage
+     * @param int $limit
+     * @param int|null $lastId
+     * @param mixed|null $lastValue
      * @return array|null
      */
-    public function getCategoryBySlugWithPosts(string $slug, string $sortBy = 'created_at', string $order = 'DESC', int $page = 1, int $perPage = 10): ?array
+    public function getCategoryBySlugWithPosts(string $slug, string $sortBy = 'created_at', string $order = 'DESC', int $limit = 10, ?int $lastId = null, $lastValue = null): ?array
     {
         $categoryData = $this->categoryRepository->findBySlug($slug);
 
@@ -99,10 +104,13 @@ class CategoryService
         }
 
         $id = $categoryData['id'];
-        $offset = ($page - 1) * $perPage;
 
-        $postsData = $this->categoryRepository->getWithPostsById($id, $sortBy, $order, $perPage, $offset);
-        $totalPosts = $this->postRepository->getCountByCategory($id);
+        $postsData = $this->categoryRepository->getWithPostsById($id, $sortBy, $order, $limit, $lastId, $lastValue);
+
+        // Получаем общее количество только для первой загрузки
+        $totalPosts = ($lastId === null || $lastValue === null)
+            ? $this->postRepository->getCountByCategory($id)
+            : null;
 
         $posts = [];
         foreach ($postsData as $postData) {
@@ -111,16 +119,73 @@ class CategoryService
             $posts[] = Post::fromArray($postData);
         }
 
-        $categoryData['posts_count'] = $totalPosts;
+        $categoryData['posts_count'] = $totalPosts ?? count($posts);
         $category = Category::fromArray($categoryData);
 
         return [
             'category' => $category,
             'posts' => $posts,
             'total' => $totalPosts,
-            'per_page' => $perPage,
-            'current_page' => $page,
-            'total_pages' => ceil($totalPosts / $perPage)
+            'limit' => $limit,
+            'has_more' => count($posts) === $limit,
+            'next_cursor' => !empty($posts) ? $this->buildNextCursor(end($posts), $sortBy, $order) : null
+        ];
+    }
+
+    /**
+     * @param Post $lastPost
+     * @param string $sortBy
+     * @param string $order
+     * @return array
+     */
+    private function buildNextCursor(Post $lastPost, string $sortBy, string $order): array
+    {
+        $cursor = [
+            'last_id' => $lastPost->id
+        ];
+
+        $cursor['last_value'] = match ($sortBy) {
+            'views' => $lastPost->views,
+            'title' => $lastPost->title,
+            default => $lastPost->created_at,
+        };
+
+        return $cursor;
+    }
+
+    /**
+     * @param string $slug
+     * @param int $page
+     * @param int $limit
+     * @param string $sortBy
+     * @param string $order
+     * @return array|null
+     */
+    public function getCategoryWithPostsClassicPagination(string $slug, int $page, int $limit, string $sortBy, string $order): ?array
+    {
+        $categoryData = $this->categoryRepository->findBySlug($slug);
+        if (!$categoryData) return null;
+
+        $postsData = $this->postRepository->getPaginatedByCategory(
+            $categoryData['id'],
+            $page,
+            $limit,
+            $sortBy,
+            $order
+        );
+
+        $totalPosts = $this->categoryRepository->getPostCount($categoryData['id']);
+
+        $posts = [];
+        foreach ($postsData as $postData) {
+            $postData['categories'] = $this->categoryRepository->getByPostId($postData['id']);
+            $posts[] = Post::fromArray($postData);
+        }
+
+        return [
+            'category' => Category::fromArray($categoryData),
+            'posts'    => $posts,
+            'total'    => $totalPosts
         ];
     }
 }

@@ -7,9 +7,6 @@ use App\Entity\Category;
 use App\Repositories\PostRepository;
 use App\Repositories\CategoryRepository;
 
-/**
- *
- */
 class PostService
 {
     /**
@@ -110,46 +107,68 @@ class PostService
 
     /**
      * @param int $limit
-     * @param int $offset
+     * @param int|null $lastId
+     * @param int|null $lastViews
      * @return array
      */
-    public function getPopularPostsPaginated(int $limit = 6, int $offset = 0): array
+    public function getPopularPostsPaginated(int $limit = 6, ?int $lastId = null, ?int $lastViews = null): array
     {
-        $postsData = $this->postRepository->getPopularPaginated($limit, $offset);
+        $postsData = $this->postRepository->getPopularPaginated($limit, $lastId, $lastViews);
 
         $posts = [];
-        foreach ($postsData as $postData) {
-            $categories = $this->categoryRepository->getByPostId($postData['id']);
-            $postData['categories'] = array_map(
-                fn($cat) => Category::fromArray($cat),
-                $categories
-            );
-            $posts[] = Post::fromArray($postData);
+        foreach ($postsData as $data) {
+            $posts[] = Post::fromArray($data);
         }
 
-        return $posts;
+        $hasMore = count($posts) === $limit;
+        $nextCursor = null;
+
+        if ($hasMore && !empty($posts)) {
+            $lastPost = end($posts);
+            $nextCursor = [
+                'last_id' => $lastPost->id,
+                'last_views' => $lastPost->views
+            ];
+        }
+
+        return [
+            'posts' => $posts,
+            'has_more' => $hasMore,
+            'next_cursor' => $nextCursor
+        ];
     }
 
     /**
      * @param int $limit
-     * @param int $offset
+     * @param int|null $lastId
+     * @param string|null $lastCreatedAt
      * @return array
      */
-    public function getLatestPostsPaginated(int $limit = 6, int $offset = 0): array
+    public function getLatestPostsPaginated(int $limit = 6, ?int $lastId = null, ?string $lastCreatedAt = null): array
     {
-        $postsData = $this->postRepository->getLatestPublishedPaginated($limit, $offset);
+        $postsData = $this->postRepository->getLatestPublishedPaginated($limit, $lastId, $lastCreatedAt);
 
         $posts = [];
-        foreach ($postsData as $postData) {
-            $categories = $this->categoryRepository->getByPostId($postData['id']);
-            $postData['categories'] = array_map(
-                fn($cat) => Category::fromArray($cat),
-                $categories
-            );
-            $posts[] = Post::fromArray($postData);
+        foreach ($postsData as $data) {
+            $posts[] = Post::fromArray($data);
         }
 
-        return $posts;
+        $hasMore = count($posts) === $limit;
+        $nextCursor = null;
+
+        if ($hasMore && !empty($posts)) {
+            $lastPost = end($posts);
+            $nextCursor = [
+                'last_id' => $lastPost->id,
+                'last_created_at' => $lastPost->created_at
+            ];
+        }
+
+        return [
+            'posts' => $posts,
+            'has_more' => $hasMore,
+            'next_cursor' => $nextCursor
+        ];
     }
 
     /**
@@ -173,8 +192,13 @@ class PostService
         return Post::fromArray($postData);
     }
 
+    /**
+     * @param int $postId
+     * @return bool
+     */
     public function incrementPostViews(int $postId): bool
     {
         return $this->postRepository->incrementViews($postId);
     }
+
 }

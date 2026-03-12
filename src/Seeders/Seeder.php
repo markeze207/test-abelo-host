@@ -10,7 +10,15 @@ abstract class Seeder
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        try {
+            $this->db = Database::getInstance()->getConnection();
+        } catch (\Exception $e) {
+            // Если БД еще не существует, это нормально для DatabaseSeeder
+            // Он создаст ее позже
+            if (get_class($this) !== DatabaseSeeder::class) {
+                throw $e;
+            }
+        }
     }
 
     /**
@@ -71,18 +79,24 @@ abstract class Seeder
         echo "Запуск сидеров...\n\n";
 
         $seeders = [
-            CategorySeeder::class,
-            PostSeeder::class,
+            DatabaseSeeder::class,  // Сначала создаем структуру БД
+            CategorySeeder::class,  // Затем категории
+            PostSeeder::class,      // Затем посты
         ];
 
         foreach ($seeders as $seederClass) {
-            echo "→ " . basename(str_replace('\\', '/', $seederClass)) . "\n";
+            $shortName = basename(str_replace('\\', '/', $seederClass));
+            echo "→ {$shortName}\n";
 
-            /** @var Seeder $seeder */
-            $seeder = new $seederClass();
-            $seeder->run();
-
-            echo "\n";
+            try {
+                /** @var Seeder $seeder */
+                $seeder = new $seederClass();
+                $seeder->run();
+                echo "\n";
+            } catch (\Exception $e) {
+                echo "  ✗ Ошибка: " . $e->getMessage() . "\n\n";
+                throw $e;
+            }
         }
 
         echo "Готово!\n";

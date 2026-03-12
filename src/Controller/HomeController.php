@@ -9,7 +9,6 @@ class HomeController extends BaseController
 {
     private PostService $postService;
     private CategoryService $categoryService;
-
     private const CATEGORIES_PER_PAGE = 3;
 
     public function __construct()
@@ -21,65 +20,48 @@ class HomeController extends BaseController
 
     public function index(): void
     {
-        // Валидация параметра page
-        $page = (int)($this->getParam('page', 1));
-
-        if (!$this->validate(['page' => $page], [
-            'page' => 'numeric|min:1|integer'
-        ])) {
-            $page = 1;
-        }
-
-        // Получаем первую страницу категорий
-        $categoriesData = $this->categoryService->getCategoriesWithPostsPaginated($page, self::CATEGORIES_PER_PAGE);
-        $popularPosts = $this->postService->getPopularPosts(6);
-        $latestPosts = $this->postService->getHomepagePosts(6);
+        $categoriesData = $this->categoryService->getCategoriesWithPostsPaginated(self::CATEGORIES_PER_PAGE);
+        $popularData = $this->postService->getPopularPostsPaginated(6);
+        $latestData = $this->postService->getLatestPostsPaginated(6);
 
         $this->render('home/index.tpl', [
-            'categories' => $categoriesData['categories'],
-            'categories_total' => $categoriesData['total'],
-            'categories_per_page' => self::CATEGORIES_PER_PAGE,
-            'has_more_categories' => $categoriesData['total'] > self::CATEGORIES_PER_PAGE,
-            'popular_posts' => $popularPosts,
-            'latest_posts' => $latestPosts,
-            'popular_total' => $this->postService->getTotalPublishedCount(),
-            'latest_total' => $this->postService->getTotalPublishedCount(),
-            'page_title' => 'Главная'
+            'categories'             => $categoriesData['categories'],
+            'has_more_categories'    => $categoriesData['has_more'],
+            'next_categories_cursor' => $categoriesData['next_cursor'],
+
+            'latest_posts'           => $latestData['posts'],
+            'has_more_latest'        => $latestData['has_more'],
+            'latest_next_cursor'     => $latestData['next_cursor'],
+
+            'popular_posts'          => $popularData['posts'],
+            'has_more_popular'       => $popularData['has_more'],
+            'popular_next_cursor'    => $popularData['next_cursor'],
+
+            'base_url'               => ''
         ]);
     }
 
     public function loadMoreCategories(): void
     {
-        // Валидация параметра page
-        $page = (int)($this->getParam('page', 1));
+        $lastId = $this->getParam('last_id') ? (int)$this->getParam('last_id') : null;
+        $lastName = $this->getParam('last_name');
+        $limit = self::CATEGORIES_PER_PAGE;
 
-        if (!$this->validate(['page' => $page], [
-            'page' => 'required|numeric|min:1|integer'
-        ])) {
-            $this->json([
-                'success' => false,
-                'error' => 'Неверный номер страницы'
-            ], 400);
-            return;
-        }
-
-        $categoriesData = $this->categoryService->getCategoriesWithPostsPaginated($page, self::CATEGORIES_PER_PAGE);
+        $categoriesData = $this->categoryService->getCategoriesWithPostsPaginated($limit, $lastId, $lastName);
 
         $categories = array_map(function($category) {
             return [
                 'id' => $category->id,
                 'name' => $category->name,
-                'slug' => $category->slug,
-                'description' => $category->description,
                 'url' => $category->getUrl(),
+                'description' => $category->description,
                 'posts' => array_map(function($post) {
                     return [
                         'id' => $post->id,
                         'title' => $post->title,
-                        'slug' => $post->slug,
-                        'excerpt' => $post->excerpt ?? '',
-                        'image' => $post->getImageUrl(),
                         'url' => $post->getUrl(),
+                        'image' => $post->getImageUrl(),
+                        'excerpt' => $post->getExcerpt(150),
                         'views' => $post->views,
                         'created_at' => $post->getFormattedDate('d.m.Y')
                     ];
@@ -90,10 +72,8 @@ class HomeController extends BaseController
         $this->json([
             'success' => true,
             'categories' => $categories,
-            'has_more' => ($page * self::CATEGORIES_PER_PAGE) < $categoriesData['total'],
-            'next_page' => $page + 1,
-            'total' => $categoriesData['total'],
-            'loaded' => count($categories)
+            'has_more' => $categoriesData['has_more'],
+            'next_cursor' => $categoriesData['next_cursor']
         ]);
     }
 }

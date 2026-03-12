@@ -97,25 +97,34 @@ class CategoryRepository implements CategoryRepositoryInterface
     }
 
     /**
-     * @param int $page
-     * @param int $perPage
+     * @param int $limit
+     * @param int|null $lastId
+     * @param string|null $lastName
      * @return array
      */
-    public function getPaginatedWithPosts(int $page = 1, int $perPage = 10): array
+    public function getPaginatedWithPosts(int $limit = 10, ?int $lastId = null, ?string $lastName = null): array
     {
-        $offset = ($page - 1) * $perPage;
-
-        return (new QueryBuilder('categories c'))
+        $query = (new QueryBuilder('categories c'))
             ->select(['c.*', 'COUNT(p.id) as posts_count'])
             ->leftJoin('post_category pc', 'c.id', '=', 'pc.category_id')
             ->leftJoin('posts p', 'pc.post_id', '=', 'p.id')
             ->groupBy('c.id')
             ->having('posts_count > 0')
             ->orderBy('c.name')
-            ->limit($perPage)
-            ->offset($offset)
-            ->get();
+            ->orderBy('c.id')
+            ->limit($limit);
+
+        if ($lastId !== null && $lastName !== null) {
+            $query->whereRaw('(c.name > ? OR (c.name = ? AND c.id > ?))', [
+                $lastName,
+                $lastName,
+                $lastId
+            ]);
+        }
+
+        return $query->get();
     }
+
 
     /**
      * @return int
@@ -136,23 +145,34 @@ class CategoryRepository implements CategoryRepositoryInterface
      * @param string $sortBy
      * @param string $order
      * @param int $limit
-     * @param int $offset
+     * @param int|null $lastId
+     * @param mixed|null $lastValue
      * @return array
      */
-    public function getWithPostsById(int $id, string $sortBy = 'created_at', string $order = 'DESC', int $limit = 10, int $offset = 0): array
+    public function getWithPostsById(int $id, string $sortBy = 'created_at', string $order = 'DESC', int $limit = 10, ?int $lastId = null, $lastValue = null): array
     {
         $allowedSort = ['views', 'created_at', 'title'];
         $sortBy = in_array($sortBy, $allowedSort) ? $sortBy : 'created_at';
         $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
 
-        return (new QueryBuilder('posts p'))
+        $query = (new QueryBuilder('posts p'))
             ->select(['p.*'])
             ->join('post_category pc', 'p.id', '=', 'pc.post_id')
             ->where('pc.category_id', '=', $id)
             ->orderBy("p.$sortBy", $order)
-            ->limit($limit)
-            ->offset($offset)
-            ->get();
+            ->orderBy('p.id', $order)
+            ->limit($limit);
+
+        if ($lastId !== null && $lastValue !== null) {
+            $comparison = $order === 'ASC' ? '>' : '<';
+            $query->whereRaw("(p.$sortBy $comparison ? OR (p.$sortBy = ? AND p.id $comparison ?))", [
+                $lastValue,
+                $lastValue,
+                $lastId
+            ]);
+        }
+
+        return $query->get();
     }
 
     /**

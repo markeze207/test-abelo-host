@@ -1,5 +1,6 @@
 window.CategoryLoader = (function() {
-    let currentPage = 1;
+    let cursor = null;
+    let isLoading = false;
 
     function escapeHtml(text) {
         if (!text) return '';
@@ -8,131 +9,86 @@ window.CategoryLoader = (function() {
         return div.innerHTML;
     }
 
-    function renderPost(post) {
-        let imageHtml = '';
-        if (post.image) {
-            imageHtml = `<img src="${post.image}" alt="${escapeHtml(post.title)}" loading="lazy">`;
-        }
-
-        return `
+    function renderCategory(cat) {
+        let postsHtml = cat.posts.map(post => `
             <article class="post-preview">
-                ${imageHtml}
-                <h3>
-                    <a href="${post.url}">
-                        ${escapeHtml(post.title)}
-                    </a>
-                </h3>
-                <p>${escapeHtml(post.excerpt)}</p>
+                ${post.image ? `<img src="${post.image}" alt="${escapeHtml(post.title)}">` : ''}
+                <h3><a href="${post.url}">${escapeHtml(post.title)}</a></h3>
+                <p>${escapeHtml(post.excerpt || '')}</p>
                 <div class="post-meta">
                     <span>Просмотров: ${post.views}</span>
                     <span>Дата: ${post.created_at}</span>
                 </div>
             </article>
-        `;
-    }
-
-    function renderCategory(category) {
-        let descriptionHtml = '';
-        if (category.description) {
-            descriptionHtml = `<p class="category-description">${escapeHtml(category.description)}</p>`;
-        }
-
-        let postsHtml = '';
-        if (category.posts && category.posts.length > 0) {
-            const postsList = category.posts.map(post => renderPost(post)).join('');
-            postsHtml = `
-                <div class="posts">
-                    ${postsList}
-                </div>
-                <a href="${category.url}" class="btn">
-                    Все статьи категории
-                </a>
-            `;
-        } else {
-            postsHtml = '<p>В этой категории пока нет статей</p>';
-        }
+        `).join('');
 
         return `
-            <section class="category" data-category-id="${category.id}">
-                <h2>
-                    <a href="${category.url}">
-                        ${escapeHtml(category.name)}
-                    </a>
-                </h2>
-                ${descriptionHtml}
-                ${postsHtml}
+            <section class="category" data-category-id="${cat.id}">
+                <h2><a href="${cat.url}">${escapeHtml(cat.name)}</a></h2>
+                ${cat.description ? `<p class="category-description">${escapeHtml(cat.description)}</p>` : ''}
+                <div class="posts-grid">${postsHtml}</div>
+                <a href="${cat.url}" class="btn">Все статьи категории</a>
             </section>
         `;
     }
 
-    function setLoading(loading) {
-        const button = document.querySelector('#load-more-categories .load-more-btn');
-        if (!button) return;
+    async function loadMore() {
+        if (isLoading || !cursor) return;
 
-        const spinner = button.querySelector('.loading-spinner');
-        if (spinner) {
-            spinner.style.display = loading ? 'inline-block' : 'none';
-        }
-        button.disabled = loading;
-    }
-
-    async function loadMore(page) {
+        const btn = document.getElementById('btn-load-more-categories');
         const container = document.getElementById('categories-container');
-        const loadMoreDiv = document.getElementById('load-more-categories');
+        const spinner = btn?.querySelector('.loading-spinner');
 
-        if (!container || !loadMoreDiv) {
-            console.error('Categories container or button not found');
-            return;
-        }
-
-        setLoading(true);
+        isLoading = true;
+        if (btn) btn.disabled = true;
+        if (spinner) spinner.style.display = 'inline-block';
 
         try {
-            const response = await fetch(`/load-more-categories?page=${page}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            const params = new URLSearchParams({
+                last_id: cursor.last_id,
+                last_name: cursor.last_name
+            });
 
+            const response = await fetch(`/load-more-categories?${params}`);
             const data = await response.json();
 
-            if (data.success && data.categories && data.categories.length > 0) {
-                // Render each category and append to container
-                data.categories.forEach(category => {
-                    const categoryHtml = renderCategory(category);
-                    container.insertAdjacentHTML('beforeend', categoryHtml);
+            if (data.success && data.categories.length > 0) {
+                data.categories.forEach(cat => {
+                    container.insertAdjacentHTML('beforeend', renderCategory(cat));
                 });
 
-                // Update current page
-                currentPage = page;
-
-                // Update button for next page or hide if no more categories
-                if (data.has_more) {
-                    const button = loadMoreDiv.querySelector('.load-more-btn');
-                    button.setAttribute('onclick', `CategoryLoader.loadMore(${page + 1})`);
-                } else {
-                    loadMoreDiv.style.display = 'none';
+                cursor = data.next_cursor;
+                if (!data.has_more) {
+                    document.getElementById('load-more-categories-wrapper')?.remove();
                 }
-
-                console.log(`Loaded ${data.categories.length} categories. Total: ${data.total}`);
-            } else {
-                loadMoreDiv.style.display = 'none';
             }
-
         } catch (error) {
-            console.error('Error loading more categories:', error);
-            alert('Произошла ошибка при загрузке категорий. Пожалуйста, попробуйте позже.');
+            console.error('Failed to load categories:', error);
         } finally {
-            setLoading(false);
+            isLoading = false;
+            if (btn) btn.disabled = false;
+            if (spinner) spinner.style.display = 'none';
         }
     }
 
     return {
-        loadMore: loadMore,
-        getCurrentPage: () => currentPage
+        init: function(initialCursor) {
+            cursor = initialCursor;
+            const btn = document.getElementById('btn-load-more-categories');
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.loadMore();
+                });
+            }
+        },
+        loadMore: loadMore
     };
 })();
 
-// Auto-initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('CategoryLoader initialized');
+    const container = document.getElementById('categories-container');
+    if (container && container.dataset.nextCursor) {
+        window.CategoryLoader.init(JSON.parse(container.dataset.nextCursor));
+    }
 });

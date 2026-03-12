@@ -48,11 +48,18 @@ class PostController extends BaseController
 
     public function loadMorePopular(): void
     {
-        $page = (int)($this->getParam('page', 1));
+        $lastId = $this->getParam('last_id') ? (int)$this->getParam('last_id') : null;
+        $lastViews = $this->getParam('last_views') ? (int)$this->getParam('last_views') : null;
         $limit = 6;
-        $offset = ($page - 1) * $limit;
 
-        $posts = $this->postService->getPopularPostsPaginated($limit, $offset);
+        if ($lastId === null || $lastViews === null) {
+            $postsData = $this->postService->getPopularPostsPaginated($limit, null, null);
+        } else {
+            $postsData = $this->postService->getPopularPostsPaginated($limit, $lastId, $lastViews);
+        }
+
+        $posts = $postsData['posts'] ?? [];
+        $nextCursor = $postsData['next_cursor'] ?? null;
 
         $this->json([
             'success' => true,
@@ -60,6 +67,7 @@ class PostController extends BaseController
                 return [
                     'id' => $post->id,
                     'title' => $post->title,
+                    'slug' => $post->slug,
                     'excerpt' => $post->getExcerpt(100),
                     'image' => $post->getImageUrl(),
                     'url' => $post->getUrl(),
@@ -67,17 +75,25 @@ class PostController extends BaseController
                     'created_at' => $post->getFormattedDate('d.m.Y')
                 ];
             }, $posts),
-            'has_more' => count($posts) === $limit
+            'has_more' => count($posts) === $limit,
+            'next_cursor' => $nextCursor
         ]);
     }
 
     public function loadMoreLatest(): void
     {
-        $page = (int)($this->getParam('page', 1));
+        $lastId = $this->getParam('last_id') ? (int)$this->getParam('last_id') : null;
+        $lastCreatedAt = $this->getParam('last_created_at');
         $limit = 6;
-        $offset = ($page - 1) * $limit;
 
-        $posts = $this->postService->getLatestPostsPaginated($limit, $offset);
+        if ($lastId === null || $lastCreatedAt === null) {
+            $postsData = $this->postService->getLatestPostsPaginated($limit, null, null);
+        } else {
+            $postsData = $this->postService->getLatestPostsPaginated($limit, $lastId, $lastCreatedAt);
+        }
+
+        $posts = $postsData['posts'] ?? [];
+        $nextCursor = $postsData['next_cursor'] ?? null;
 
         $this->json([
             'success' => true,
@@ -85,6 +101,7 @@ class PostController extends BaseController
                 return [
                     'id' => $post->id,
                     'title' => $post->title,
+                    'slug' => $post->slug,
                     'excerpt' => $post->getExcerpt(100),
                     'image' => $post->getImageUrl(),
                     'url' => $post->getUrl(),
@@ -92,7 +109,8 @@ class PostController extends BaseController
                     'created_at' => $post->getFormattedDate('d.m.Y')
                 ];
             }, $posts),
-            'has_more' => count($posts) === $limit
+            'has_more' => count($posts) === $limit,
+            'next_cursor' => $nextCursor
         ]);
     }
 }

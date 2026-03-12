@@ -31,10 +31,11 @@ interface CategoryRepositoryInterface
      * @param string $sortBy
      * @param string $order
      * @param int $limit
-     * @param int $offset
+     * @param int|null $lastId
+     * @param mixed|null $lastValue
      * @return array
      */
-    public function getWithPostsById(int $id, string $sortBy = 'created_at', string $order = 'DESC', int $limit = 10, int $offset = 0): array;
+    public function getWithPostsById(int $id, string $sortBy = 'created_at', string $order = 'DESC', int $limit = 10, ?int $lastId = null, $lastValue = null): array;
 
     /**
      * @param int $categoryId
@@ -69,6 +70,20 @@ interface CategoryRepositoryInterface
      * @param int $page
      * @param int $perPage
      * @return array
+     * @deprecated Используйте getPaginatedWithPosts для курсорной пагинации
      */
     public function getPaginated(int $page = 1, int $perPage = 10): array;
+
+    /**
+     * @param int $limit
+     * @param int|null $lastId
+     * @param string|null $lastName
+     * @return array
+     */
+    public function getPaginatedWithPosts(int $limit = 10, ?int $lastId = null, ?string $lastName = null): array;
+
+    /**
+     * @return int
+     */
+    public function getTotalWithPostsCount(): int;
 }

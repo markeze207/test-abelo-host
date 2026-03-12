@@ -1,8 +1,6 @@
 window.LoadMore = (function() {
-    let pages = {
-        latest: 1,
-        popular: 1
-    };
+    let cursors = { latest: null, popular: null };
+    let isLoading = false;
 
     function escapeHtml(text) {
         if (!text) return "";
@@ -11,100 +9,69 @@ window.LoadMore = (function() {
         return div.innerHTML;
     }
 
-    function createPostHTML(post) {
-        let imageHtml = "";
+    async function loadMorePosts(type) {
+        if (isLoading) return;
 
-        if (post.image) {
-            if (post.image.startsWith("http") || post.image.startsWith("/")) {
-                imageHtml = `<img src="${post.image}" alt="${escapeHtml(post.title)}" loading="lazy">`;
-            } else {
-                imageHtml = `<img src="${post.image}" alt="${escapeHtml(post.title)}" loading="lazy">`;
-            }
-        }
-
-        const postUrl = post.slug ? `/post/${post.slug}` : post.url;
-
-        return `
-      <article class="post-preview">
-        ${imageHtml}
-        <h3>
-          <a href="${postUrl}">
-            ${escapeHtml(post.title)}
-          </a>
-        </h3>
-        <p>${escapeHtml(post.excerpt)}</p>
-        <div class="post-meta">
-          <span>Просмотров: ${post.views}</span>
-          <span>Дата: ${post.created_at}</span>
-        </div>
-      </article>
-    `;
-    }
-
-    function setLoadingState(button, isLoading) {
-        const spinner = button.querySelector(".loading-spinner");
-
-        if (spinner) {
-            spinner.style.display = isLoading ? "inline-block" : "none";
-        }
-
-        button.disabled = isLoading;
-    }
-
-    async function loadMorePosts(type, page) {
         const container = document.getElementById(`${type}-posts-container`);
-        const buttonContainer = document.getElementById(`load-more-${type}`);
+        const btn = document.querySelector(`.load-more-btn[data-type="${type}"]`);
+        const cursor = cursors[type];
 
-        if (!container || !buttonContainer) {
-            console.error(`Container or button not found for type: ${type}`);
-            return;
-        }
+        if (!container || !cursor) return;
 
-        const loadButton = buttonContainer.querySelector(".load-more-btn");
-        setLoadingState(loadButton, true);
+        isLoading = true;
+        if (btn) btn.disabled = true;
 
         try {
-            const response = await fetch(`/load-more-${type}?page=${page}`);
+            const params = new URLSearchParams({ last_id: cursor.last_id });
+            if (type === 'popular') params.append('last_views', cursor.last_views);
+            else params.append('last_created_at', cursor.last_created_at);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            const response = await fetch(`/load-more-${type}?${params}`);
             const data = await response.json();
 
             if (data.success && data.posts.length > 0) {
                 data.posts.forEach(post => {
-                    const html = createPostHTML(post);
-                    container.insertAdjacentHTML("beforeend", html);
+                    const html = `
+                        <article class="post-preview">
+                            ${post.image ? `<img src="${post.image}" alt="${escapeHtml(post.title)}" loading="lazy">` : ''}
+                            <h3><a href="${post.url}">${escapeHtml(post.title)}</a></h3>
+                            <p>${escapeHtml(post.excerpt || '')}</p>
+                            <div class="post-meta">
+                                <span>Просмотров: ${post.views}</span>
+                                <span>Дата: ${post.created_at}</span>
+                            </div>
+                        </article>`;
+                    container.insertAdjacentHTML('beforeend', html);
                 });
 
-                pages[type] = page;
-
-                if (data.has_more) {
-                    loadButton.setAttribute("onclick", `LoadMore.loadMorePosts('${type}', ${page + 1})`);
-                } else {
-                    buttonContainer.style.display = "none";
-                }
-            } else {
-                buttonContainer.style.display = "none";
+                cursors[type] = data.next_cursor;
+                if (!data.has_more) btn.parentElement.remove();
             }
-        } catch (error) {
-            console.error("Error loading more posts:", error);
-            alert("Произошла ошибка при загрузке статей. Пожалуйста, попробуйте позже.");
+        } catch (e) {
+            console.error(e);
         } finally {
-            setLoadingState(loadButton, false);
+            isLoading = false;
+            if (btn) btn.disabled = false;
         }
     }
 
     return {
-        init: function() {
-            console.log("LoadMore module initialized with slug support");
-        },
-
+        init: (initial) => { cursors = { ...cursors, ...initial }; },
         loadMorePosts: loadMorePosts
     };
 })();
 
-document.addEventListener("DOMContentLoaded", function() {
-    window.LoadMore.init();
+document.addEventListener('DOMContentLoaded', () => {
+    const latest = document.getElementById('latest-posts-container');
+    const popular = document.getElementById('popular-posts-container');
+    const initData = {};
+
+    if (latest?.dataset.nextCursor) initData.latest = JSON.parse(latest.dataset.nextCursor);
+    if (popular?.dataset.nextCursor) initData.popular = JSON.parse(popular.dataset.nextCursor);
+
+    window.LoadMore.init(initData);
+
+    document.querySelectorAll('.load-more-btn[data-type]').forEach(btn => {
+        btn.addEventListener('click', () => window.LoadMore.loadMorePosts(btn.dataset.type));
+    });
 });
