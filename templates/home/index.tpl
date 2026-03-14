@@ -11,9 +11,13 @@
             {foreach $categories as $category}
                 <section class="category" data-category-id="{$category->id}">
                     <h2><a href="{$category->getUrl()}">{$category->name|escape}</a></h2>
+                    {if $category->description}
+                        <p class="category-description">{$category->description|escape}</p>
+                    {/if}
                     <div class="posts-grid">
                         {include file='partials/post_cards.tpl' posts=$category->posts}
                     </div>
+                    <a href="{$category->getUrl()}" class="btn">Все статьи категории</a>
                 </section>
             {/foreach}
         {/if}

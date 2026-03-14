@@ -12,7 +12,9 @@ RUN apt-get update && apt-get install -y \
     zip \
     && echo "ru_RU.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
-    && update-locale LANG=ru_RU.UTF-8
+    && update-locale LANG=ru_RU.UTF-8 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Установка переменных окружения для локали
 ENV LANG ru_RU.UTF-8
@@ -26,20 +28,26 @@ RUN a2enmod rewrite
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Копирование конфигурации сайта
-COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/php/000-default.conf /etc/apache2/sites-available/000-default.conf
 
-# Теперь копируем остальной код приложения
-COPY . /var/www/html
+# Устанавливаем рабочую директорию
+WORKDIR /var/www/html
+
+# 1. СНАЧАЛА копируем ТОЛЬКО composer файлы (для кэширования)
+COPY composer.json composer.lock* ./
+
+# 2. ПОТОМ устанавливаем зависимости
+RUN composer install --no-dev --no-interaction --optimize-autoloader
+
+# 3. И ТОЛЬКО ПОТОМ копируем остальной код
+COPY . .
 
 # Создание директорий для Smarty с правильными правами
 RUN mkdir -p /var/www/html/smarty/compiled \
     /var/www/html/smarty/cache \
     /var/www/html/smarty/config \
-    && chmod -R 777 /var/www/html/smarty
-
-# Создание директории для логов
-RUN mkdir -p /var/www/html/logs && chmod 777 /var/www/html/logs
-
-WORKDIR /var/www/html
+    /var/www/html/logs \
+    && chmod -R 777 /var/www/html/smarty \
+    && chmod -R 777 /var/www/html/logs
 
 EXPOSE 80
