@@ -36,15 +36,7 @@ class Post
             return null;
         }
 
-        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
-            return $this->image;
-        }
-
-        if (str_starts_with($this->image, '/public/')) {
-            return $this->image;
-        }
-
-        return ltrim($this->image, '/');
+        return $this->image;
     }
 
     /**
