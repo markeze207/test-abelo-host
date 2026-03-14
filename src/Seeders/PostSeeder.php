@@ -7,16 +7,9 @@ use App\Builders\PostBuilder;
 class PostSeeder extends Seeder
 {
     private array $images = [
-        'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&auto=format',
-        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format',
-        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format',
-        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format',
-        'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&auto=format',
-        'https://images.unsplash.com/photo-1550439062-609e1531270e?w=800&auto=format',
-        'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800&auto=format',
-        'https://images.unsplash.com/photo-1543286386-713bdd548da4?w=800&auto=format',
-        'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format',
-        'https://images.unsplash.com/photo-1523961131990-5ea7c61b2107?w=800&auto=format'
+        '/uploads/1.avif',
+        '/uploads/2.avif',
+        '/uploads/3.avif',
     ];
 
     public function run(): void
@@ -72,7 +65,7 @@ class PostSeeder extends Seeder
                 'description' => 'Что выбрать для проекта в 2024 году',
                 'content' => $this->getLongContent('frameworks'),
                 'views' => 5600,
-                'image_index' => 3,
+                'image_index' => 0,
                 'categories' => ['PHP']
             ],
             [
@@ -80,7 +73,7 @@ class PostSeeder extends Seeder
                 'description' => 'Что такое PSR и почему их важно соблюдать',
                 'content' => $this->getLongContent('psr'),
                 'views' => 2100,
-                'image_index' => 4,
+                'image_index' => 0,
                 'categories' => ['PHP']
             ],
             [
@@ -88,7 +81,7 @@ class PostSeeder extends Seeder
                 'description' => 'Трейты, интерфейсы, абстрактные классы',
                 'content' => $this->getLongContent('oop'),
                 'views' => 4300,
-                'image_index' => 5,
+                'image_index' => 0,
                 'categories' => ['PHP']
             ],
             [
@@ -96,7 +89,7 @@ class PostSeeder extends Seeder
                 'description' => 'Как писать тесты и почему это важно',
                 'content' => $this->getLongContent('testing'),
                 'views' => 1850,
-                'image_index' => 6,
+                'image_index' => 2,
                 'categories' => ['PHP']
             ],
             [
@@ -104,7 +97,7 @@ class PostSeeder extends Seeder
                 'description' => 'Возможности асинхронного программирования',
                 'content' => $this->getLongContent('async'),
                 'views' => 980,
-                'image_index' => 7,
+                'image_index' => 1,
                 'categories' => ['PHP']
             ],
             [
@@ -112,7 +105,7 @@ class PostSeeder extends Seeder
                 'description' => 'PDO, prepared statements, транзакции',
                 'content' => $this->getLongContent('php-mysql'),
                 'views' => 6700,
-                'image_index' => 8,
+                'image_index' => 0,
                 'categories' => ['PHP', 'Базы данных']
             ],
             [
@@ -120,7 +113,7 @@ class PostSeeder extends Seeder
                 'description' => 'Защита от XSS, CSRF, SQL-инъекций',
                 'content' => $this->getLongContent('php-security'),
                 'views' => 3900,
-                'image_index' => 9,
+                'image_index' => 2,
                 'categories' => ['PHP', 'Безопасность']
             ],
 
@@ -138,7 +131,7 @@ class PostSeeder extends Seeder
                 'description' => 'Преимущества типизации в JavaScript проектах',
                 'content' => $this->getLongContent('typescript'),
                 'views' => 890,
-                'image_index' => 6,
+                'image_index' => 1,
                 'categories' => ['JavaScript', 'Frontend']
             ],
             [
@@ -146,7 +139,7 @@ class PostSeeder extends Seeder
                 'description' => 'Полное руководство по современным методам верстки',
                 'content' => $this->getLongContent('css'),
                 'views' => 1500,
-                'image_index' => 3,
+                'image_index' => 0,
                 'categories' => ['Frontend']
             ],
             [
@@ -154,7 +147,7 @@ class PostSeeder extends Seeder
                 'description' => 'Практические советы по ускорению работы с базами данных',
                 'content' => $this->getLongContent('mysql'),
                 'views' => 750,
-                'image_index' => 3,
+                'image_index' => 0,
                 'categories' => ['Базы данных']
             ],
             [
@@ -162,7 +155,7 @@ class PostSeeder extends Seeder
                 'description' => 'Сравнение двух популярных СУБД',
                 'content' => $this->getLongContent('postgresql'),
                 'views' => 620,
-                'image_index' => 4,
+                'image_index' => 2,
                 'categories' => ['Базы данных']
             ],
             [
@@ -170,7 +163,7 @@ class PostSeeder extends Seeder
                 'description' => 'Как начать использовать Docker в повседневной разработке',
                 'content' => $this->getLongContent('docker'),
                 'views' => 2100,
-                'image_index' => 4,
+                'image_index' => 0,
                 'categories' => ['Инструменты', 'DevOps']
             ],
             [
@@ -178,7 +171,7 @@ class PostSeeder extends Seeder
                 'description' => 'Rebase, cherry-pick и другие полезные команды',
                 'content' => $this->getLongContent('git'),
                 'views' => 1450,
-                'image_index' => 9,
+                'image_index' => 1,
                 'categories' => ['Инструменты']
             ],
             [
@@ -186,7 +179,7 @@ class PostSeeder extends Seeder
                 'description' => 'Советы по подготовке к техническим интервью',
                 'content' => $this->getLongContent('interview'),
                 'views' => 3500,
-                'image_index' => 5,
+                'image_index' => 2,
                 'categories' => ['Карьера']
             ],
             [
@@ -210,7 +203,7 @@ class PostSeeder extends Seeder
                 'description' => 'Настройка непрерывной интеграции и доставки',
                 'content' => $this->getLongContent('cicd'),
                 'views' => 780,
-                'image_index' => 7,
+                'image_index' => 0,
                 'categories' => ['DevOps']
             ],
             [
@@ -218,7 +211,7 @@ class PostSeeder extends Seeder
                 'description' => 'Основы оркестрации контейнеров',
                 'content' => $this->getLongContent('k8s'),
                 'views' => 630,
-                'image_index' => 8,
+                'image_index' => 0,
                 'categories' => ['DevOps']
             ],
             [
@@ -226,7 +219,7 @@ class PostSeeder extends Seeder
                 'description' => 'Пузырьковая, быстрая, сортировка слиянием',
                 'content' => $this->getLongContent('algorithms'),
                 'views' => 2100,
-                'image_index' => 5,
+                'image_index' => 2,
                 'categories' => ['Алгоритмы и структуры данных']
             ],
             [
@@ -234,7 +227,7 @@ class PostSeeder extends Seeder
                 'description' => 'Почему Go становится популярным',
                 'content' => $this->getLongContent('go'),
                 'views' => 890,
-                'image_index' => 6,
+                'image_index' => 2,
                 'categories' => ['Go']
             ],
             [
@@ -250,7 +243,7 @@ class PostSeeder extends Seeder
                 'description' => 'Защита от XSS, CSRF, SQL-инъекций',
                 'content' => $this->getLongContent('security'),
                 'views' => 1100,
-                'image_index' => 2,
+                'image_index' => 1,
                 'categories' => ['Безопасность']
             ],
             [
@@ -266,7 +259,7 @@ class PostSeeder extends Seeder
                 'description' => 'Лучшие книги по программированию',
                 'content' => $this->getLongContent('books'),
                 'views' => 3400,
-                'image_index' => 9,
+                'image_index' => 0,
                 'categories' => ['Книги и ресурсы']
             ],
             [
@@ -274,7 +267,7 @@ class PostSeeder extends Seeder
                 'description' => 'Устаревшая, но всё ещё полезная информация',
                 'content' => 'Когда-то это было актуально...',
                 'views' => 120,
-                'image_index' => 8,
+                'image_index' => 0,
                 'categories' => ['Архив']
             ]
         ];
