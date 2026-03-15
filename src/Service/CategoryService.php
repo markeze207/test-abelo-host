@@ -51,48 +51,6 @@ class CategoryService
         ];
     }
 
-    public function getCategoryBySlugWithPosts(
-        string $slug,
-        string $sortBy = 'created_at',
-        string $order = 'DESC',
-        int $limit = 10,
-        ?int $lastId = null,
-               $lastValue = null
-    ): ?array {
-        $categoryData = $this->categoryRepository->findBySlug($slug);
-
-        if (!$categoryData) {
-            return null;
-        }
-
-        $id        = $categoryData['id'];
-        $postsData = $this->categoryRepository->getWithPostsById($id, $sortBy, $order, $limit, $lastId, $lastValue);
-
-        $totalPosts = ($lastId === null || $lastValue === null)
-            ? $this->postRepository->getCountByCategory($id)
-            : null;
-
-        $posts = [];
-        foreach ($postsData as $postData) {
-            $postData['categories'] = $this->getCategoriesForPost($postData['id']);
-            $posts[]                = Post::fromArray($postData);
-        }
-
-        $categoryData['posts_count'] = $totalPosts ?? count($posts);
-        $category                    = Category::fromArray($categoryData);
-
-        return [
-            'category'    => $category,
-            'posts'       => $posts,
-            'total'       => $totalPosts,
-            'limit'       => $limit,
-            'has_more'    => count($posts) === $limit,
-            'next_cursor' => !empty($posts)
-                ? $this->buildNextCursor(end($posts), $sortBy, $order)
-                : null,
-        ];
-    }
-
     public function getCategoryWithPostsClassicPagination(
         string $slug,
         int $page,
@@ -134,17 +92,5 @@ class CategoryService
             fn($data) => Category::fromArray($data),
             $this->categoryRepository->getByPostId($postId)
         );
-    }
-
-    private function buildNextCursor(Post $lastPost, string $sortBy, string $order): array
-    {
-        return [
-            'last_id'    => $lastPost->id,
-            'last_value' => match ($sortBy) {
-                'views'  => $lastPost->views,
-                'title'  => $lastPost->title,
-                default  => $lastPost->created_at,
-            },
-        ];
     }
 }

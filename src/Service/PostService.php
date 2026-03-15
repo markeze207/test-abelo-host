@@ -14,19 +14,6 @@ class PostService
         private readonly CategoryRepositoryInterface $categoryRepository
     ) {}
 
-    public function getHomepagePosts(int $limit = 6): array
-    {
-        $postsData = $this->postRepository->getLatestPublished($limit);
-
-        $posts = [];
-        foreach ($postsData as $postData) {
-            $postData['categories'] = $this->getCategoriesForPost($postData['id']);
-            $posts[]                = Post::fromArray($postData);
-        }
-
-        return $posts;
-    }
-
     public function getSimilarPosts(int $postId, int $limit = 3): array
     {
         $post = $this->postRepository->findById($postId);
@@ -53,19 +40,6 @@ class PostService
         }
 
         return $similarPosts;
-    }
-
-    public function getPopularPosts(int $limit = 5): array
-    {
-        return array_map(
-            fn($data) => Post::fromArray($data),
-            $this->postRepository->getPopular($limit)
-        );
-    }
-
-    public function getTotalPublishedCount(): int
-    {
-        return $this->postRepository->getTotalCount();
     }
 
     public function getPopularPostsPaginated(int $limit = 6, ?int $lastId = null, ?int $lastViews = null): array
