@@ -6,12 +6,10 @@ use App\Service\CategoryService;
 
 class CategoryController extends BaseController
 {
-    private CategoryService $categoryService;
 
-    public function __construct()
+    public function __construct(private readonly CategoryService $categoryService)
     {
         parent::__construct();
-        $this->categoryService = new CategoryService();
     }
 
     public function view(string $slug): void

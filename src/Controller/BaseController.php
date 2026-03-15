@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Core\Container;
 use App\Core\Session;
 use App\Helpers\Validation\ValidationTrait;
 use Smarty;
@@ -16,10 +17,8 @@ abstract class BaseController
 
     public function __construct()
     {
-        $this->smarty = new Smarty();
+        $this->smarty = Container::get(Smarty::class);
         $this->setupSmarty();
-
-        $this->db = Database::getInstance();
 
         $this->assignGlobalVars();
 

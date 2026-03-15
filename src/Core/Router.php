@@ -90,13 +90,12 @@ class Router
                 throw new \Exception("Controller $controllerClass not found");
             }
 
-            $controller = new $controllerClass();
+            $controller = \App\Core\Container::get($controllerClass);
 
             if (!method_exists($controller, $action)) {
                 throw new \Exception("Method $action not found in $controllerClass");
             }
 
-            // Вызываем контроллер с параметрами из URI
             call_user_func_array([$controller, $action], $match['params']);
 
         } catch (\Exception $e) {
@@ -119,8 +118,10 @@ class Router
     {
         header("HTTP/1.0 404 Not Found");
 
-        if (class_exists($this->namespace . 'HomeController')) {
-            $controller = new ($this->namespace . 'HomeController')();
+        $homeControllerClass = $this->namespace . 'HomeController';
+        if (class_exists($homeControllerClass)) {
+            // ЗАМЕНА: Также используем контейнер здесь
+            $controller = \App\Core\Container::get($homeControllerClass);
             if (method_exists($controller, 'notFound')) {
                 $controller->notFound();
                 return;

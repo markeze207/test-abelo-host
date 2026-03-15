@@ -7,15 +7,11 @@ use App\Service\CategoryService;
 
 class HomeController extends BaseController
 {
-    private PostService $postService;
-    private CategoryService $categoryService;
     private const CATEGORIES_PER_PAGE = 3;
 
-    public function __construct()
+    public function __construct(private readonly PostService $postService, private readonly CategoryService $categoryService)
     {
         parent::__construct();
-        $this->postService = new PostService();
-        $this->categoryService = new CategoryService();
     }
 
     public function index(): void

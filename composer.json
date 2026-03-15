@@ -5,7 +5,8 @@
     "php": ">=8.1",
     "smarty/smarty": "^4.3",
     "ext-pdo": "*",
-    "ext-mbstring": "*"
+    "ext-mbstring": "*",
+    "php-di/php-di": "^7.1"
   },
   "autoload": {
     "psr-4": {

@@ -6,12 +6,10 @@ use App\Service\PostService;
 
 class PostController extends BaseController
 {
-    private PostService $postService;
 
-    public function __construct()
+    public function __construct(private readonly PostService $postService)
     {
         parent::__construct();
-        $this->postService = new PostService();
     }
 
     public function view(string $slug): void
